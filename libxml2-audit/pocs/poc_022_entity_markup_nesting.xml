@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE doc [
+  <!ENTITY e1 "<a><b><c>text</c></b></a>">
+  <!ENTITY e2 "&e1;&e1;&e1;">
+  <!ENTITY e3 "<wrapper>&e2;</wrapper>">
+]>
+<doc>&e3;&e3;</doc>

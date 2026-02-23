@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!DOCTYPE doc [
+  <!ENTITY ent1 "<nested>text</nested>">
+  <!ENTITY ent2 "&#x41;&#x42;&#x43;&#x44;&#x45;">
+  <!ENTITY ent3 "&ent1;&ent2;&ent1;&ent2;">
+]>
+<doc>
+  before&ent3;after
+  <child attr="&ent2; more &ent2;"/>
+  &ent1;
+</doc>

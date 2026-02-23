@@ -1,0 +1,511 @@
+=== libxml2 ASan Test Results ===
+Date: Mon Feb 23 23:05:03 UTC 2026
+
+--- Testing: poc_001_entity_expansion_huge.xml ---
+  [xmllint --noent --huge]
+Entity: line 1: parser error : Maximum entity amplification factor exceeded, see xmlCtxtSetMaxAmplification.
+&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d
+   ^
+Entity: line 1: 
+&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c
+            ^
+  exit: 4
+  [harness push]
+Entity: line 1: parser error : Maximum entity amplification factor exceeded, see xmlCtxtSetMaxAmplification.
+&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d
+   ^
+Entity: line 1: 
+&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c
+            ^
+  exit: 0
+  [harness fragment]
+Entity: line 1: parser error : Maximum entity amplification factor exceeded, see xmlCtxtSetMaxAmplification.
+&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d
+   ^
+Entity: line 1: 
+&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c
+            ^
+  exit: 0
+  [harness xslt]
+Entity: line 1: parser error : Maximum entity amplification factor exceeded, see xmlCtxtSetMaxAmplification.
+&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;&d
+   ^
+Entity: line 1: 
+&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;&c
+            ^
+  exit: 0
+
+--- Testing: poc_002_deep_entity_nesting.xml ---
+  [xmllint --noent --huge]
+Entity: line 1: parser error : Maximum entity nesting depth exceeded
+&e2;&e2;
+    ^
+Entity: line 1: 
+&e1;&e1;
+    ^
+  exit: 4
+  [harness push]
+Entity: line 1: parser error : Maximum entity nesting depth exceeded
+&e2;&e2;
+    ^
+Entity: line 1: 
+&e1;&e1;
+    ^
+  exit: 0
+  [harness fragment]
+Entity: line 1: parser error : Maximum entity nesting depth exceeded
+&e2;&e2;
+    ^
+Entity: line 1: 
+&e1;&e1;
+    ^
+  exit: 0
+  [harness xslt]
+Entity: line 1: parser error : Maximum entity nesting depth exceeded
+&e22;&e22;
+     ^
+Entity: line 1: 
+&e21;&e21;
+     ^
+  exit: 0
+
+--- Testing: poc_003_deep_element_nesting.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_004_entity_in_attr_huge.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_005_namespace_flood.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_006_entity_in_ns_uri.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_007_mixed_entity_text.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_008_cdata_boundary.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_009_entity_redef_attr.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_010_pi_comment_edge.xml ---
+  [xmllint --noent --huge]
+/home/user/libxml2-audit/pocs/poc_010_pi_comment_edge.xml:7: parser error : Double hyphen within comment: <!-- comment with 
+  <!-- comment with -- embedded and special chars < > & -->
+                    ^
+  exit: 4
+  [harness push]
+/home/user/libxml2-audit/pocs/poc_010_pi_comment_edge.xml:7: parser error : Double hyphen within comment: <!-- comment with 
+  <!-- comment with -- embedded and special chars < > & -->
+                    ^
+  exit: 0
+  [harness fragment]
+Entity: line 7: parser error : Double hyphen within comment: <!-- comment with 
+  <!-- comment with -- embedded and special chars < > & -->
+                    ^
+  exit: 0
+  [harness xslt]
+/home/user/libxml2-audit/pocs/poc_010_pi_comment_edge.xml:7: parser error : Double hyphen within comment: <!-- comment with 
+  <!-- comment with -- embedded and special chars < > & -->
+                    ^
+  exit: 0
+
+--- Testing: poc_011_encoding_switch.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_012_charref_boundaries.xml ---
+  [xmllint --noent --huge]
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 0
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+          ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 1
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+               ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 8
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                    ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 11
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                         ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 12
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                              ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 14
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                                   ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 31
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                                         ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:6: parser error : xmlParseCharRef: invalid xmlChar value 55296
+  <e>&#xD800;</e>
+             ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:7: parser error : xmlParseCharRef: invalid xmlChar value 57343
+  <e>&#xDFFF;</e>
+             ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:8: parser error : xmlParseCharRef: character reference out of bounds
+  <e>&#x110000;</e>
+               ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:9: parser error : xmlParseCharRef: invalid xmlChar value 0
+  <e>&#0;</e>
+         ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:10: parser error : xmlParseCharRef: character reference out of bounds
+  <e>&#999999999;</e>
+                 ^
+  exit: 4
+  [harness push]
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 0
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+          ^
+  exit: 0
+  [harness fragment]
+Entity: line 3: parser error : xmlParseCharRef: invalid xmlChar value 0
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+          ^
+Entity: line 3: parser error : xmlParseCharRef: invalid xmlChar value 1
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+               ^
+Entity: line 3: parser error : xmlParseCharRef: invalid xmlChar value 8
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                    ^
+Entity: line 3: parser error : xmlParseCharRef: invalid xmlChar value 11
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                         ^
+Entity: line 3: parser error : xmlParseCharRef: invalid xmlChar value 12
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                              ^
+Entity: line 3: parser error : xmlParseCharRef: invalid xmlChar value 14
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                                   ^
+Entity: line 3: parser error : xmlParseCharRef: invalid xmlChar value 31
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                                         ^
+Entity: line 6: parser error : xmlParseCharRef: invalid xmlChar value 55296
+  <e>&#xD800;</e>
+             ^
+Entity: line 7: parser error : xmlParseCharRef: invalid xmlChar value 57343
+  <e>&#xDFFF;</e>
+             ^
+Entity: line 8: parser error : xmlParseCharRef: character reference out of bounds
+  <e>&#x110000;</e>
+               ^
+Entity: line 9: parser error : xmlParseCharRef: invalid xmlChar value 0
+  <e>&#0;</e>
+         ^
+Entity: line 10: parser error : xmlParseCharRef: character reference out of bounds
+  <e>&#999999999;</e>
+                 ^
+  exit: 0
+  [harness xslt]
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 0
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+          ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 1
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+               ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 8
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                    ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 11
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                         ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 12
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                              ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 14
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                                   ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:3: parser error : xmlParseCharRef: invalid xmlChar value 31
+  <e>&#x0;&#x1;&#x8;&#xB;&#xC;&#xE;&#x1F;</e>
+                                         ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:6: parser error : xmlParseCharRef: invalid xmlChar value 55296
+  <e>&#xD800;</e>
+             ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:7: parser error : xmlParseCharRef: invalid xmlChar value 57343
+  <e>&#xDFFF;</e>
+             ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:8: parser error : xmlParseCharRef: character reference out of bounds
+  <e>&#x110000;</e>
+               ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:9: parser error : xmlParseCharRef: invalid xmlChar value 0
+  <e>&#0;</e>
+         ^
+/home/user/libxml2-audit/pocs/poc_012_charref_boundaries.xml:10: parser error : xmlParseCharRef: character reference out of bounds
+  <e>&#999999999;</e>
+                 ^
+  exit: 0
+
+--- Testing: poc_020_long_attr.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+/home/user/libxml2-audit/pocs/poc_020_long_attr.xml:2: parser error : Resource limit exceeded: Buffer size limit exceeded, try XML_PARSE_HUGE
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                                                                               ^
+  exit: 0
+
+--- Testing: poc_021_many_attrs.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_022_entity_markup_nesting.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_023_entity_ns_context.xml ---
+  [xmllint --noent --huge]
+/home/user/libxml2-audit/pocs/poc_023_entity_ns_context.xml:6: namespace error : Namespace prefix ns on elem is not defined
+  <decl1 xmlns:ns="urn:ns1">&ent;</decl1>
+                                 ^
+<ns:elem/>
+        ^
+  exit: 0
+  [harness push]
+/home/user/libxml2-audit/pocs/poc_023_entity_ns_context.xml:6: namespace error : Namespace prefix ns on elem is not defined
+  <decl1 xmlns:ns="urn:ns1">&ent;</decl1>
+                                 ^
+<ns:elem/>
+        ^
+  exit: 0
+  [harness fragment]
+namespace error : Namespace prefix ns on elem is not defined
+  <decl1 xmlns:ns="urn:ns1">&ent;</decl1>
+                                 ^
+<ns:elem/>
+        ^
+  exit: 0
+  [harness xslt]
+/home/user/libxml2-audit/pocs/poc_023_entity_ns_context.xml:6: namespace error : Namespace prefix ns on elem is not defined
+  <decl1 xmlns:ns="urn:ns1">&ent;</decl1>
+                                 ^
+<ns:elem/>
+        ^
+  exit: 0
+
+--- Testing: poc_024_empty_entities.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_025_entity_attr_chain_deep.xml ---
+  [xmllint --noent --huge]
+/home/user/libxml2-audit/pocs/poc_025_entity_attr_chain_deep.xml:43: parser error : Maximum entity amplification factor exceeded, see xmlCtxtSetMaxAmplification.
+<doc attr="&e38;"/>
+                ^
+  exit: 4
+  [harness push]
+/home/user/libxml2-audit/pocs/poc_025_entity_attr_chain_deep.xml:43: parser error : Maximum entity amplification factor exceeded, see xmlCtxtSetMaxAmplification.
+<doc attr="&e38;"/>
+                ^
+  exit: 0
+  [harness fragment]
+Entity: line 43: parser error : Maximum entity amplification factor exceeded, see xmlCtxtSetMaxAmplification.
+<doc attr="&e38;"/>
+                ^
+  exit: 0
+  [harness xslt]
+/home/user/libxml2-audit/pocs/poc_025_entity_attr_chain_deep.xml:43: parser error : Maximum entity nesting depth exceeded
+<doc attr="&e38;"/>
+                ^
+  exit: 0
+
+--- Testing: poc_026_large_cdata.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_027_mixed_attr_entities.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_028_utf16le.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_029_utf16be.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_030_truncated_utf16.xml ---
+  [xmllint --noent --huge]
+/home/user/libxml2-audit/pocs/poc_030_truncated_utf16.xml:2: I/O error : Invalid bytes in character encoding
+<doc>Hello</doc>
+                ^
+  exit: 4
+  [harness push]
+/home/user/libxml2-audit/pocs/poc_030_truncated_utf16.xml:2: I/O error : Invalid bytes in character encoding
+<doc>Hello</doc>
+                ^
+  exit: 0
+  [harness fragment]
+I/O error : Invalid bytes in character encoding
+<doc>Hello</doc>
+                ^
+  exit: 0
+  [harness xslt]
+/home/user/libxml2-audit/pocs/poc_030_truncated_utf16.xml:2: I/O error : Invalid bytes in character encoding
+<doc>Hello</doc>
+                ^
+  exit: 0
+
+--- Testing: poc_031_invalid_utf8.xml ---
+  [xmllint --noent --huge]
+/home/user/libxml2-audit/pocs/poc_031_invalid_utf8.xml:2: I/O error : Invalid bytes in character encoding
+Bytes: 0xC0 0xAF 0xE0 0x80
+<doc>
+     ^
+  exit: 4
+  [harness push]
+/home/user/libxml2-audit/pocs/poc_031_invalid_utf8.xml:2: I/O error : Invalid bytes in character encoding
+Bytes: 0xC0 0xAF 0xE0 0x80
+<doc>
+     ^
+  exit: 0
+  [harness fragment]
+I/O error : Invalid bytes in character encoding
+Bytes: 0xC0 0xAF 0xE0 0x80
+<doc>
+     ^
+  exit: 0
+  [harness xslt]
+/home/user/libxml2-audit/pocs/poc_031_invalid_utf8.xml:2: I/O error : Invalid bytes in character encoding
+Bytes: 0xC0 0xAF 0xE0 0x80
+<doc>
+     ^
+  exit: 0
+
+--- Testing: poc_032_utf16_surrogates.xml ---
+  [xmllint --noent --huge]
+  exit: 0
+  [harness push]
+  exit: 0
+  [harness fragment]
+  exit: 0
+  [harness xslt]
+  exit: 0
+
+--- Testing: poc_033_utf16_bad_surrogate.xml ---
+  [xmllint --noent --huge]
+/home/user/libxml2-audit/pocs/poc_033_utf16_bad_surrogate.xml:1: I/O error : Invalid bytes in character encoding
+<?xml version="1.0" encoding="UTF-16"?>
+^
+  exit: 4
+  [harness push]
+/home/user/libxml2-audit/pocs/poc_033_utf16_bad_surrogate.xml:1: I/O error : Invalid bytes in character encoding
+<?xml version="1.0" encoding="UTF-16"?>
+^
+  exit: 0
+  [harness fragment]
+I/O error : Invalid bytes in character encoding
+<?xml version="1.0" encoding="UTF-16"?>
+^
+  exit: 0
+  [harness xslt]
+/home/user/libxml2-audit/pocs/poc_033_utf16_bad_surrogate.xml:1: I/O error : Invalid bytes in character encoding
+<?xml version="1.0" encoding="UTF-16"?>
+^
+  exit: 0
+
+=== Testing Complete ===

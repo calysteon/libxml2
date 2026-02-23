@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE doc [
+  <!ENTITY e1 "value1">
+  <!ENTITY e1 "value2_redefined_longer_value_that_is_different">
+  <!ENTITY nested "&e1;&e1;&e1;">
+]>
+<doc attr="&nested;" attr2="&e1;">
+  <child>&e1;</child>
+</doc>

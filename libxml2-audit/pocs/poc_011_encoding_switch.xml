@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE doc [
+  <!ENTITY utf8ent "Ünïcödé ∑∏∫ 中文 日本語">
+]>
+<doc>
+  <text>Ünïcödé text with various encodings</text>
+  <text2>&utf8ent;</text2>
+  <text3>Mixed: ASCII and Ünïcödé ∑∏∫</text3>
+  <text4 attr="Ünïcödé ∑∏∫ value">content</text4>
+</doc>

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!DOCTYPE doc [
+  <!ENTITY pi_data "data with &amp; and &lt; chars">
+]>
+<doc>
+  <?target processing instruction with special chars < > & " '?>
+  <!-- comment with -- embedded and special chars < > & -->
+  <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+  <child/>
+</doc>

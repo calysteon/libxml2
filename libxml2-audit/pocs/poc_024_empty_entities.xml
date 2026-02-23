@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE doc [
+  <!ENTITY empty "">
+  <!ENTITY empty2 "&empty;&empty;&empty;">
+  <!ENTITY empty3 "&empty2;&empty2;&empty2;">
+]>
+<doc attr="&empty;">&empty;&empty2;&empty3;</doc>

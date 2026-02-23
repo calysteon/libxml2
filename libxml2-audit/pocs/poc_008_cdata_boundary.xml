@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE doc [
+  <!ENTITY ent "text<![CDATA[cdata]]>more">
+]>
+<doc>
+  <![CDATA[first]]>middle<![CDATA[last]]>
+  <child><![CDATA[]]></child>
+  <child2><![CDATA[a]]><![CDATA[b]]></child2>
+</doc>

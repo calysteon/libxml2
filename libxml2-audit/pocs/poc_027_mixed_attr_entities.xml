@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE doc [
+  <!ENTITY x "&#38;#65;">
+  <!ENTITY y "&#38;amp;">
+]>
+<doc attr="&x;&y;&#38;&#60;&#62;"/>

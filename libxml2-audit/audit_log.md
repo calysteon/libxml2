@@ -1,0 +1,127 @@
+# libxml2 Security Audit Log
+
+## Audit Scope
+- **Target:** libxml2 (HEAD at commit 538b2e3)
+- **Focus:** Memory corruption vulnerabilities reachable from WebKit
+- **Date:** 2026-02-23
+
+## Phase 1: WebKit Attack Surface Mapping
+
+### Files Analyzed
+- `WebKit/Source/WebCore/xml/parser/XMLDocumentParserLibxml2.cpp`
+- `WebKit/Source/WebCore/xml/parser/XMLDocumentParser.cpp`
+- `WebKit/Source/WebCore/xml/parser/XMLDocumentParser.h`
+- `WebKit/Source/WebCore/xml/XSLTProcessorLibxslt.cpp`
+- `WebKit/Source/WebCore/xml/XSLTProcessor.cpp`
+- `WebKit/Source/WebCore/xml/XSLStyleSheetLibxslt.cpp`
+- `WebKit/Source/WebCore/xml/XPathParser.cpp`
+- `WebKit/Source/WebCore/xml/XPathExpression.cpp`
+- `WebKit/Source/WebCore/xml/XMLHttpRequest.cpp`
+- `WebKit/Source/WebCore/xml/DOMParser.cpp`
+
+### Key Findings
+1. WebKit uses `XML_PARSE_NOENT | XML_PARSE_HUGE` for document parsing
+2. WebKit uses `XML_PARSE_NODICT | XML_PARSE_NOENT | XML_PARSE_HUGE` for fragment parsing
+3. XSLT uses `XML_PARSE_NOENT | XML_PARSE_DTDLOAD | XML_PARSE_DTDATTR | XML_PARSE_NOCDATA`
+4. WebKit has its own XPath engine — libxml2's xpath.c is NOT reachable
+5. Push-mode parsing with UTF-16 input
+6. No explicit entity amplification limit (relies on libxml2 default)
+7. External entity loading gated by same-origin policy
+8. Tree depth limited to 5000
+
+## Phase 2: Targeted libxml2 Code Audit
+
+### Files Audited (Reachable Paths)
+
+| File | Lines | Focus Areas | Issues Found |
+|---|---|---|---|
+| `parser.c` | ~12,000 | Push parser, entity expansion, attribute parsing | See findings |
+| `parserInternals.c` | ~2,200 | xmlCurrentChar, xmlNextChar, encoding | No issues |
+| `SAX2.c` | ~2,600 | Text coalescing, node construction | No issues |
+| `buf.c` | ~600 | Buffer growth, xmlBuf API | Clean |
+| `encoding.c` | ~2,700 | UTF-16 conversion, encoding switching | Clean |
+| `entities.c` | ~900 | Entity creation, expansion tracking | Clean |
+| `dict.c` | ~900 | String dictionary, hash operations | Clean |
+| `tree.c` | ~8,000 | Node manipulation, tree operations | Clean |
+| `uri.c` | ~2,400 | URI building, escaping, resolution | See findings |
+| `xmlIO.c` | ~2,400 | Input buffer management | Recently fixed (e334a9d) |
+| `xmlstring.c` | ~500 | String operations | Clean |
+
+### Audit Methodology
+1. Searched for `int` variables used for sizes/lengths in allocation-related code
+2. Checked for integer overflow in arithmetic before `xmlMalloc`/`xmlRealloc`
+3. Analyzed error paths for use-after-free patterns
+4. Verified buffer bounds in encoding conversion
+5. Checked entity expansion depth/amplification limits
+6. Analyzed push parser state machine for stale pointer issues
+7. Verified SAX callback implementations for memory safety
+
+### Areas Confirmed Safe
+- **xmlSBuf** (parser.c): Uses `unsigned`, proper overflow checks, bounded by max length
+- **xmlBuf** (buf.c): Uses `size_t`, proper growth logic
+- **UTF-16→UTF-8 conversion** (encoding.c): Proper bounds checking on every write
+- **xmlCharEncInput** (encoding.c): Proper size_t usage, INT_MAX/2 capping
+- **Entity amplification**: Default limit enforced via `xmlParserEntityCheck`
+- **SAX2 text coalescing** (SAX2.c): `int` sizes bounded by XML_MAX_HUGE_LENGTH (1B), within int range
+- **xmlGrowCapacity** (memory.h): Correct overflow-safe growth calculation
+- **Namespace handling** (parser.c): Clean push/pop/lookup with proper bounds
+- **Attribute handling** (parser.c): `xmlCtxtGrowAttrs` uses `xmlGrowCapacity` correctly
+
+### Negative Results (Important)
+- No use-after-free found in error paths
+- No stack overflow beyond configured depth limits
+- No type confusion in reachable code paths
+- No double-free in cleanup code
+- No uninitialized memory use in reachable paths
+- Push parser state machine appears correct for boundary conditions
+- UTF-16 surrogate pair handling is correct
+
+## Phase 3: ASan/UBSan Testing
+
+### Build Configuration
+```bash
+cmake -DCMAKE_C_COMPILER=gcc \
+  -DCMAKE_C_FLAGS="-fsanitize=address,undefined -g -O1 -fno-omit-frame-pointer" \
+  -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" \
+  -DLIBXML2_WITH_PYTHON=OFF -DBUILD_SHARED_LIBS=OFF
+```
+
+### Test Results
+- **libxml2 test suite:** 22/22 tests passed with ASan (0 errors)
+- **Custom PoC inputs:** 26 test files, 4 modes each = 104 test runs, 0 ASan errors
+- **Push parser chunking:** 6 chunk boundary tests, 0 ASan errors
+- **Existing fuzz corpus:** Extensive coverage already via libFuzzer
+
+### PoC Files Tested
+- Entity expansion (billion laughs variants)
+- Deep entity nesting (up to 40 levels)
+- Deep element nesting (256 levels)
+- Entity expansion in attributes
+- Namespace flooding
+- Entity in namespace URIs
+- Mixed entity/text content
+- CDATA boundary conditions
+- Entity redefinition
+- PI/comment edge cases
+- Encoding switching
+- Character reference boundaries
+- Long attribute values (10MB)
+- Many attributes (10,000)
+- Entity with markup content
+- Entity in different namespace contexts
+- Empty entity expansion chains
+- Deep entity chain in attributes
+- Large CDATA sections
+- Mixed attribute entity types
+- UTF-16 LE/BE with BOM
+- Truncated UTF-16
+- Invalid UTF-8 sequences
+- UTF-16 surrogate pairs
+- Invalid surrogate pairs
+
+## Recent Security Fixes (Context)
+- `538b2e3` (2026-02-20): Integer overflow in `xmlBuildRelativeURISafe` — `int` variables for path indices
+- `e334a9d` (2026-02-19): `int` to `size_t` fix in `xmlIO.c` buffer reallocation
+- `5dfd906`: Use-after-free mitigation in RelaxNG (not WebKit-reachable)
+- `3590835`: Entity hash table fix
+- `19549c6`: RelaxNG include limit (not WebKit-reachable)
