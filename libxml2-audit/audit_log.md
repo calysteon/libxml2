@@ -119,6 +119,36 @@ cmake -DCMAKE_C_COMPILER=gcc \
 - UTF-16 surrogate pairs
 - Invalid surrogate pairs
 
+## Phase 4: XPath Engine Audit (xpath.c)
+
+### Key Correction
+The Phase 1 assessment that "WebKit has its own XPath engine — libxml2's xpath.c is NOT reachable" is **incomplete**. WebKit uses libxslt for XSLT processing, and libxslt calls `xmlXPathCompiledEval()` extensively. Attacker-controlled XPath expressions in XSLT stylesheets reach xpath.c.
+
+### Files Audited
+
+| File | Lines | Focus Areas | Issues Found |
+|---|---|---|---|
+| `xpath.c` | 12,153 | Value stack, node-sets, compilation, evaluation, string functions, axis traversal | 4 low-severity findings |
+
+### Findings
+1. **LOW** — Potential NULL dereference in XSLT result tree fragment transfer (line 10347): `ctxt->value` may be NULL when `obj->boolval && obj->user` — requires unlikely object state
+2. **LOW** — Timsort comparison function propagates error code -2, violating total ordering — theoretical concern for cross-document node-sets
+3. **LOW** — Locale-dependent `toupper()` in `lang()` function (line 7966) — correctness issue, not memory safety
+4. **LOW** — O(n²) node-set equality comparison not covered by `opLimit` — bounded by `XPATH_MAX_NODESET_LENGTH`
+
+### Areas Confirmed Safe
+- Value stack: `xmlGrowCapacity` + `XPATH_MAX_STACK_DEPTH` (1M limit)
+- Node-set growth: `xmlGrowCapacity` + `XPATH_MAX_NODESET_LENGTH` (10M limit)
+- Compiled step array: `xmlGrowCapacity` + `XPATH_MAX_STEPS` (1M limit)
+- Recursion depth: Bounded in both compiler and evaluator by `XPATH_MAX_RECURSION_DEPTH`
+- Operation count: `xmlXPathCheckOpLimit` throughout traversal and evaluation
+- Object caching: Bounded by `maxNodeset`/`maxMisc`, no UAF from cache
+- Number formatting: `snprintf` with proper buffer sizes
+- String functions: All handle NaN, overflow, and boundary cases correctly
+- Axis traversal: Iterative, `OP_LIMIT_EXCEEDED` checked per iteration
+
+See `libxml2-audit/xpath_audit.md` for full details.
+
 ## Recent Security Fixes (Context)
 - `538b2e3` (2026-02-20): Integer overflow in `xmlBuildRelativeURISafe` — `int` variables for path indices
 - `e334a9d` (2026-02-19): `int` to `size_t` fix in `xmlIO.c` buffer reallocation
