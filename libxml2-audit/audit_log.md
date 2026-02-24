@@ -155,6 +155,51 @@ The Phase 1 assessment that "WebKit has its own XPath engine — libxml2's xpath
 
 See `libxml2-audit/xpath_audit.md` for full details.
 
+## Phase 5: libarchive Audit
+
+### Overview
+libarchive is shipped by Apple as part of macOS and iOS. It processes untrusted archive
+formats (RAR, ZIP, 7-Zip, tar, etc.). The RAR format parsers have had the highest CVE
+density (CVE-2024-20696, CVE-2024-20697, CVE-2024-26256, CVE-2024-48957, CVE-2024-48958,
+CVE-2025-5914, CVE-2025-25724, and more). libarchive is ~125K lines of C.
+
+### Files Audited
+
+| File | Lines | Focus Areas | Issues Found |
+|---|---|---|---|
+| `archive_read_support_format_rar.c` | 3,918 | RAR v4: LZSS, PPMd, filter VM, header parsing | 2 medium + 5 low |
+| `archive_read_support_format_rar5.c` | 4,411 | RAR v5: decompression, filters, solid streams, header parsing | 2 high + 6 medium + 2 low |
+| `archive_read_support_format_zip.c` | 4,412 | ZIP: central directory, local headers, encryption, decompression | 2 high + 1 medium + 2 low |
+| `archive_read_support_format_7zip.c` | 4,532 | 7-Zip: header parsing, SFX detection, coder chains | 1 high + 4 medium |
+
+### Highest-Priority Findings
+
+1. **HIGH** — 7-Zip: `kArchiveProperties` data never consumed → header parser desync → potential memory corruption via controlled allocation sizes
+2. **HIGH** — RAR v5: Missing NULL checks after `calloc` in `init_unpack` → crash on OOM
+3. **HIGH** — RAR v5: Signed truncation of `unpacked_size` on 32-bit → unbounded decompression
+4. **HIGH** — ZIP: Unchecked error return in `zip_read_mac_metadata` → read position corruption
+5. **HIGH** — ZIP: Encryption flags switch/case never matches (logic bug — `& 0xf000` masks used with case values `0x0001-0x0003`)
+6. **MEDIUM** — RAR v4: NULL pointer deref in `read_exttime` — `localtime()` return unchecked
+7. **MEDIUM** — RAR v4: `staticdatalen` integer overflow in `compile_program` → multi-GB allocation DoS
+8. **MEDIUM** — RAR v5: Multiple signed truncation issues on 32-bit (bytes_remaining, read_var_sized, block_start)
+9. **MEDIUM** — 7-Zip: `numDigests` uint32_t overflow → heap overflow via small allocation
+10. **MEDIUM** — 7-Zip: Directory entry name heap OOB write (2-byte overflow)
+
+See `libxml2-audit/libarchive_rar_audit.md`, `libarchive_rar5_audit.md`, and `libarchive_zip_7zip_audit.md` for full details.
+
+## ANGLE Metal Backend — Reconnaissance
+
+ANGLE is WebKit's bundled graphics translation layer for WebGL. The Metal backend
+(~50K lines) runs in the GPU process on macOS/iOS. Three exploited zero-days in 2025:
+- CVE-2025-14174: OOB memory access via pixelsDepthPitch sizing (exploited ITW)
+- CVE-2025-9478: Use-after-free (found by AI agent "Big Sleep")
+- CVE-2025-6558: Sandbox escape via input validation failure
+
+Key audit targets identified: `ContextMtl.mm`, `TextureMtl.mm`, `BufferMtl.mm`,
+`TransformFeedbackMtl.mm`. Standalone clone: `git clone https://github.com/google/angle`.
+
+See `libxml2-audit/angle_recon.md` for full reconnaissance report.
+
 ## Recent Security Fixes (Context)
 - `538b2e3` (2026-02-20): Integer overflow in `xmlBuildRelativeURISafe` — `int` variables for path indices
 - `e334a9d` (2026-02-19): `int` to `size_t` fix in `xmlIO.c` buffer reallocation
