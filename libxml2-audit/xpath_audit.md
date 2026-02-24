@@ -98,6 +98,34 @@ for (i = 0; lang[i] != 0; i++)
 
 ---
 
+## Finding #5: concat() Continues After OOM, Produces Corrupt Output (LOW)
+
+**Location:** `xpath.c:7405-7420` (in `xmlXPathConcatFunction`)
+
+```c
+while (nargs > 0) {
+    CAST_TO_STRING;
+    newobj = xmlXPathValuePop(ctxt);
+    ...
+    tmp = xmlStrcat(newobj->stringval, cur->stringval);
+    if (tmp == NULL)
+        xmlXPathPErrMemory(ctxt);       // sets error flag, does NOT return
+    newobj->stringval = cur->stringval;
+    cur->stringval = tmp;               // tmp == NULL → cur->stringval = NULL
+    xmlXPathReleaseObject(ctxt->context, newobj);
+    nargs--;
+}
+xmlXPathValuePush(ctxt, cur);           // pushes object with NULL stringval
+```
+
+**Analysis:** When `xmlStrcat` fails with OOM, it internally frees its first argument (`newobj->stringval`) via `xmlStrncat`'s realloc-failure path. Control continues to line 7416 where the freed pointer is overwritten (preventing double-free), and `cur->stringval` is set to NULL. The loop then **continues without breaking**, processing remaining arguments with `cur->stringval = NULL`. Subsequent `xmlStrcat(newobj_N->stringval, NULL)` calls return `newobj_N->stringval` unchanged (since `xmlStrcat` with `add==NULL` returns `cur` immediately). The final `xmlXPathValuePush` pushes an object with silently corrupted stringval.
+
+**Impact:** State corruption on OOM. No memory-safety exploit beyond the already-triggered OOM condition. The error flag is set, so callers that check `ctxt->error` will detect the failure.
+
+**Fix:** Add early return after OOM detection: `if (tmp == NULL) { xmlXPathReleaseObject(ctxt->context, newobj); xmlXPathReleaseObject(ctxt->context, cur); return; }`
+
+---
+
 ## Areas Confirmed Safe
 
 ### Value Stack (`valueTab`/`valueNr`/`valueMax`)
@@ -190,6 +218,7 @@ for (i = 0; lang[i] != 0; i++)
 | 2 | Timsort comparison propagates error code | LOW | Logic error | Theoretical only — requires cross-document node-sets |
 | 3 | Locale-dependent toupper() in lang() | LOW | Correctness | Not a memory safety issue |
 | 4 | O(n²) node-set equality without opLimit | LOW | DoS | Bounded by node-set size limits |
+| 5 | concat() continues after OOM | LOW | State corruption | Only on OOM, error flag is set |
 
 ## Overall Assessment
 
