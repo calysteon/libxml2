@@ -224,10 +224,10 @@ from `chromium.googlesource.com/angle/angle` HEAD of main branch.
 
 | Severity | Count |
 |----------|-------|
-| HIGH | 10 |
-| MEDIUM | 30 |
-| LOW | 27 |
-| **Total** | **67** |
+| HIGH | 11 |
+| MEDIUM | 34 |
+| LOW | 32 |
+| **Total** | **77** |
 
 ### Highest-Priority Findings (HIGH)
 

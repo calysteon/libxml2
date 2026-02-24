@@ -21,11 +21,11 @@ sandbox escape chains.
 
 | Severity | Count | Description |
 |----------|-------|-------------|
-| **HIGH** | 10 | Memory corruption, OOB access, stack overflow |
-| **MEDIUM** | 25 | Integer overflow, truncation, state inconsistency |
-| **LOW** | 27 | Missing validation, code quality, DoS |
+| **HIGH** | 11 | Memory corruption, OOB access, stack overflow, UAF |
+| **MEDIUM** | 29 | Integer overflow, truncation, state inconsistency, race conditions |
+| **LOW** | 32 | Missing validation, code quality, DoS |
 | **INFO** | 3 | Debug code, pragmas |
-| **Total** | **65** | |
+| **Total** | **75** | |
 
 ### Top 5 Most Exploitable Findings
 
@@ -64,7 +64,7 @@ sandbox escape chains.
 | File | Lines | Findings |
 |------|-------|----------|
 | `mtl_render_utils.*` + `mtl_format_utils.*` + `VertexArrayMtl.*` | ~5,600 | 2 HIGH, 4 MEDIUM, 4 LOW |
-| `FrameBufferMtl.*` + `IOSurfaceSurfaceMtl.*` + `RenderTargetMtl.*` | ~2,500 | (pending) |
+| `FrameBufferMtl.*` + `IOSurfaceSurfaceMtl.*` + `RenderTargetMtl.*` | ~2,600 | 1 HIGH, 4 MEDIUM, 5 LOW |
 
 ---
 
@@ -198,6 +198,17 @@ but their product is not checked against `uint32_t` limits. The shader computes
 `vertex_id * dstStride + dstBufferStartOffset` which can overflow 32 bits, writing to incorrect
 buffer offsets.
 
+### H11: Stale RenderTargetMtl* Raw Pointers After Texture Deletion
+
+**File:** `FrameBufferMtl.h` line 211, `RenderTargetMtl.h` lines 55-57
+**WebGL Reachable:** Partially
+
+`FramebufferMtl` stores raw `RenderTargetMtl*` pointers (`mColorRenderTargets`, `mDepthRenderTarget`,
+`mStencilRenderTarget`), obtained from attachments. `RenderTargetMtl` uses `TextureWeakRef` for the
+texture, but the `RenderTargetMtl` object itself is owned by the texture/renderbuffer. If the backing
+GL object is deleted while still attached, the raw pointer in `FramebufferMtl` becomes dangling.
+Subsequent reads via `prepareRenderPass()` or `getColorReadRenderTarget()` dereference freed memory.
+
 ---
 
 ## MEDIUM Severity Findings (Summary)
@@ -234,6 +245,10 @@ buffer offsets.
 | M28 | Pipeline.cpp | Missing switch default cases — uninitialized variables |
 | M29 | RewritePipelines.cpp | Resource exhaustion via pipeline struct proliferation |
 | M30 | EmitMetal.cpp | Unbounded output string growth in TInfoSinkBase |
+| M31 | FrameBufferMtl.mm | Integer overflow in `CopyTextureSliceLevelToTempBuffer` (uint32_t width*height*bpp) |
+| M32 | FrameBufferMtl.mm | Null dereference in `readPixels` when read attachment is `GL_NONE` |
+| M33 | IOSurfaceSurfaceMtl.mm | Format bytes-per-element mismatch is only a warning, not a validation failure |
+| M34 | IOSurfaceSurfaceMtl.mm | Race condition in IOSurface shared resource access (no cross-process sync) |
 
 ---
 
