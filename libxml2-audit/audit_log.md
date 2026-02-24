@@ -128,14 +128,18 @@ The Phase 1 assessment that "WebKit has its own XPath engine — libxml2's xpath
 
 | File | Lines | Focus Areas | Issues Found |
 |---|---|---|---|
-| `xpath.c` | 12,153 | Value stack, node-sets, compilation, evaluation, string functions, axis traversal | 5 low-severity findings |
+| `xpath.c` | 12,153 | Value stack, node-sets, compilation, evaluation, string functions, axis traversal | 1 medium + 7 low-severity findings |
+| `timsort.h` | ~400 | Timsort sort algorithm (used by xpath.c) | Included in xpath.c findings |
 
 ### Findings
 1. **LOW** — Potential NULL dereference in XSLT result tree fragment transfer (line 10347): `ctxt->value` may be NULL when `obj->boolval && obj->user` — requires unlikely object state
 2. **LOW** — Timsort comparison function propagates error code -2, violating total ordering — theoretical concern for cross-document node-sets
 3. **LOW** — Locale-dependent `toupper()` in `lang()` function (line 7966) — correctness issue, not memory safety
 4. **LOW** — O(n²) node-set equality comparison not covered by `opLimit` — bounded by `XPATH_MAX_NODESET_LENGTH`
-5. **LOW** — `concat()` continues after OOM, producing corrupt output — error flag is set, not exploitable beyond OOM
+5. **MEDIUM** — **Timsort calls `exit(1)` on merge-buffer allocation failure** (`timsort.h:365`) — process-killing DoS reachable from any XPath sort with >64 nodes under memory pressure
+6. **LOW** — `concat()` continues after OOM, producing corrupt output — error flag is set, not exploitable beyond OOM
+7. **LOW** — `xmlXPathFreeObject` instead of `xmlXPathReleaseObject` in `xmlXPathEqualValues` — cache bypass
+8. **LOW** — `xmlNodeGetContent` NULL not checked before `xmlStrEqual` in `xmlXPathEqualNodeSets` — incorrect equality on OOM
 
 ### Areas Confirmed Safe
 - Value stack: `xmlGrowCapacity` + `XPATH_MAX_STACK_DEPTH` (1M limit)

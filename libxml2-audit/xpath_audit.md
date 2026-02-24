@@ -98,7 +98,31 @@ for (i = 0; lang[i] != 0; i++)
 
 ---
 
-## Finding #5: concat() Continues After OOM, Produces Corrupt Output (LOW)
+## Finding #5: Timsort Calls exit(1) on Allocation Failure — Process-Killing DoS (MEDIUM)
+
+**Location:** `timsort.h:358-365` (in `TIM_SORT_RESIZE`, used by `xmlXPathNodeSetSort`)
+
+```c
+static void TIM_SORT_RESIZE(TEMP_STORAGE_T *store, const size_t new_size) {
+  if (store->alloc < new_size) {
+    SORT_TYPE *tempstore = (SORT_TYPE *)realloc(store->storage, new_size * sizeof(SORT_TYPE));
+    if (tempstore == NULL) {
+      fprintf(stderr, "Error allocating temporary storage for tim sort: ...");
+      exit(1);    // <-- hard process termination
+    }
+```
+
+**Analysis:** When the merge-buffer allocation inside timsort fails, the entire process is unconditionally terminated via `exit(1)`. This cannot be recovered from by the library or the application. There is no return code, no error signaling to the caller, no `longjmp`. The `fprintf` to `stderr` is also a minor information leak. Timsort's merge phase is triggered for node-sets with >64 nodes (below which binary insertion sort is used with no heap allocation).
+
+**Reachability:** Any XPath expression that produces a node-set requiring sorting (which is very common — most axis traversal results are sorted) with >64 nodes, evaluated under memory pressure. This is reachable from WebKit via XSLT.
+
+**Impact:** Process termination (DoS). A library function should never call `exit()`. An attacker who can control XSLT stylesheets and trigger memory pressure could crash the host process.
+
+**Fix:** Replace `exit(1)` with error propagation — return an error code from `TIM_SORT_RESIZE` and have callers handle the failure gracefully. Alternatively, pre-allocate the merge buffer and fail gracefully before entering timsort.
+
+---
+
+## Finding #6: concat() Continues After OOM, Produces Corrupt Output (LOW)
 
 **Location:** `xpath.c:7405-7420` (in `xmlXPathConcatFunction`)
 
@@ -123,6 +147,33 @@ xmlXPathValuePush(ctxt, cur);           // pushes object with NULL stringval
 **Impact:** State corruption on OOM. No memory-safety exploit beyond the already-triggered OOM condition. The error flag is set, so callers that check `ctxt->error` will detect the failure.
 
 **Fix:** Add early return after OOM detection: `if (tmp == NULL) { xmlXPathReleaseObject(ctxt->context, newobj); xmlXPathReleaseObject(ctxt->context, cur); return; }`
+
+---
+
+## Finding #7: xmlXPathFreeObject Instead of xmlXPathReleaseObject (LOW)
+
+**Location:** `xpath.c:5718` (in `xmlXPathEqualValues`)
+
+```c
+if (arg1 == arg2) {
+    xmlXPathFreeObject(arg1);
+    return(1);
+}
+```
+
+**Analysis:** When both arguments are the same pointer (aliased), `xmlXPathFreeObject` is used instead of `xmlXPathReleaseObject`. Since the object was obtained via `valuePop`, it may be a cached object that should be returned to the cache. Using `xmlXPathFreeObject` bypasses the cache and unconditionally frees memory. The companion `xmlXPathNotEqualValues` at line 5790 correctly uses `xmlXPathReleaseObject`.
+
+**Impact:** Minor memory management inefficiency — missed cache return. Not a crash or memory corruption.
+
+---
+
+## Finding #8: xmlNodeGetContent NULL Not Checked Before xmlStrEqual (LOW)
+
+**Location:** `xpath.c:5509-5517` (in `xmlXPathEqualNodeSets`)
+
+**Analysis:** When `xmlNodeGetContent` returns NULL due to allocation failure, `xmlXPathPErrMemory` is called (setting the error flag) but execution continues to `xmlStrEqual(values1[i], values2[j])`. `xmlStrEqual(NULL, NULL)` returns 1 (pointer equality), so two nodes whose content could not be fetched are silently treated as equal. The error flag is set, but the function does not abort — the caller receives a potentially incorrect result alongside an error-flagged context.
+
+**Impact:** Incorrect comparison result under OOM. Not exploitable beyond OOM conditions.
 
 ---
 
@@ -218,7 +269,10 @@ xmlXPathValuePush(ctxt, cur);           // pushes object with NULL stringval
 | 2 | Timsort comparison propagates error code | LOW | Logic error | Theoretical only — requires cross-document node-sets |
 | 3 | Locale-dependent toupper() in lang() | LOW | Correctness | Not a memory safety issue |
 | 4 | O(n²) node-set equality without opLimit | LOW | DoS | Bounded by node-set size limits |
-| 5 | concat() continues after OOM | LOW | State corruption | Only on OOM, error flag is set |
+| 5 | **Timsort exit(1) on alloc failure** | **MEDIUM** | **Process-killing DoS** | **Reachable under memory pressure with >64 node sets** |
+| 6 | concat() continues after OOM | LOW | State corruption | Only on OOM, error flag is set |
+| 7 | xmlXPathFreeObject vs xmlXPathReleaseObject in EqualValues | LOW | Cache bypass | Minor memory management inconsistency |
+| 8 | xmlNodeGetContent NULL not checked in EqualNodeSets | LOW | OOM logic error | Two unreadable nodes compared as equal on OOM |
 
 ## Overall Assessment
 
