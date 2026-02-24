@@ -200,6 +200,86 @@ Key audit targets identified: `ContextMtl.mm`, `TextureMtl.mm`, `BufferMtl.mm`,
 
 See `libxml2-audit/angle_recon.md` for full reconnaissance report.
 
+## Phase 6: ANGLE Metal Backend Full Audit
+
+### Overview
+Full source code audit of the ANGLE Metal backend (~25,000+ lines across 30+ files) plus the
+MSL shader compiler (~10,000+ lines, 38 files). Source retrieved via Chromium source viewer
+from `chromium.googlesource.com/angle/angle` HEAD of main branch.
+
+### Files Audited
+
+| Component | Key Files | Lines |
+|-----------|----------|-------|
+| **Texture (P0)** | TextureMtl.mm, TextureMtl.h, mtl_resources.h | ~3,300 |
+| **Context (P0)** | ContextMtl.mm, ContextMtl.h | ~3,000 |
+| **Buffer (P0)** | BufferMtl.mm, mtl_buffer_pool.*, mtl_buffer_manager.* | ~2,500 |
+| **XFB (P1)** | TransformFeedbackMtl.*, ProvokingVertexHelper.*, rewrite_indices.metal | ~850 |
+| **Infra (P1)** | mtl_command_buffer.*, mtl_resources.*, mtl_state_cache.* | ~6,900 |
+| **MSL Compiler (P1)** | src/compiler/translator/msl/ (38 files) | ~10,000+ |
+| **Utils (P2)** | mtl_render_utils.*, mtl_format_utils.*, VertexArrayMtl.* | ~5,600 |
+| **FBO (P2)** | FrameBufferMtl.*, IOSurfaceSurfaceMtl.*, RenderTargetMtl.* | ~2,500 |
+
+### Finding Summary
+
+| Severity | Count |
+|----------|-------|
+| HIGH | 10 |
+| MEDIUM | 30 |
+| LOW | 27 |
+| **Total** | **67** |
+
+### Highest-Priority Findings (HIGH)
+
+1. **TextureMtl: CopyTextureData lacks source/dest bounds validation** — Exact CVE-2025-14174 pattern.
+   `pixelsDepthPitch` from GL unpack params controls source pointer arithmetic without bounds checking.
+   Reachable from WebGL via `pixelStorei` + 3D texture upload.
+
+2. **MSL Compiler: Stack overflow via deep AST recursion** — `GenMetalTraverser` has no recursion
+   depth limit. Crafted GLSL shader with thousands of nested expressions blows the call stack.
+   Reachable from WebGL `compileShader()`.
+
+3. **VertexArrayMtl: Integer overflow in vertex buffer GPU conversion** — GPU compute shader uses
+   `uint32_t` offsets that overflow when `vertexCount * dstStride` exceeds 32 bits.
+
+4. **mtl_render_utils: Integer overflow in triangle fan index generation** — `(count-2)*3` overflows
+   `uint32_t`, causing undersized allocation followed by heap buffer overflow.
+
+5. **BufferPool: uint32_t truncation of allocation offset** — `mNextAllocationOffset` wraps at 4GB,
+   causing allocation overlap and data aliasing.
+
+6. **mtl_resources: Race condition in multi-context CPU/GPU access** — Non-atomic check-then-act
+   with developer-flagged TODO comment.
+
+7. **MSL Compiler: Debug env var allows arbitrary shader injection** — `GMD_FIXED_EMIT` environment
+   variable bypasses all shader compilation, reading arbitrary files as shader output.
+
+8. **TextureMtl: Integer overflow in staging buffer size (32-bit)** — `size_t` overflow on 32-bit
+   platforms produces undersized allocation for subsequent massive `memcpy`.
+
+9. **ContextMtl: Null return from getRenderPassCommandEncoder** — Immediate dereference without null
+   check in XFB render pass setup.
+
+10. **TextureMtl: pixelsDepthPitch mismatch in staging buffer reads** — Source data read using
+    `pixelsDepthPitch` which can be smaller than actual image stride.
+
+### Systemic Issues
+
+1. **`#pragma allow_unsafe_buffers`** — Every `.mm` file disables Chromium's buffer safety analysis
+2. **ASSERT-only validation** — Critical safety checks stripped in release builds
+3. **Pervasive uint32_t truncation** — size_t to uint32_t casts throughout Metal encoder paths
+
+### CVE Pattern Analysis
+
+| CVE | Pattern | Current Status |
+|-----|---------|----------------|
+| CVE-2025-14174 | pixelsDepthPitch sizing | Core pattern still in `CopyTextureData` — relies on frontend validation |
+| CVE-2022-26717 | XFB buffer UAF | Fixed (ref-counting). Dormant `#if 0` code would reintroduce if re-enabled |
+| CVE-2025-9478 | Buffer management UAF | shared_ptr mitigates; timing issues remain |
+| CVE-2025-10502 | Heap buffer overflow | Integer overflow patterns could produce similar bugs |
+
+See `libxml2-audit/angle_metal_audit.md` for the full audit report with detailed findings.
+
 ## Recent Security Fixes (Context)
 - `538b2e3` (2026-02-20): Integer overflow in `xmlBuildRelativeURISafe` — `int` variables for path indices
 - `e334a9d` (2026-02-19): `int` to `size_t` fix in `xmlIO.c` buffer reallocation
