@@ -128,7 +128,7 @@ The Phase 1 assessment that "WebKit has its own XPath engine — libxml2's xpath
 
 | File | Lines | Focus Areas | Issues Found |
 |---|---|---|---|
-| `xpath.c` | 12,153 | Value stack, node-sets, compilation, evaluation, string functions, axis traversal | 1 medium + 7 low-severity findings |
+| `xpath.c` | 12,153 | Value stack, node-sets, compilation, evaluation, string functions, axis traversal | 1 medium + 8 low-severity findings |
 | `timsort.h` | ~400 | Timsort sort algorithm (used by xpath.c) | Included in xpath.c findings |
 
 ### Findings
@@ -140,6 +140,7 @@ The Phase 1 assessment that "WebKit has its own XPath engine — libxml2's xpath
 6. **LOW** — `concat()` continues after OOM, producing corrupt output — error flag is set, not exploitable beyond OOM
 7. **LOW** — `xmlXPathFreeObject` instead of `xmlXPathReleaseObject` in `xmlXPathEqualValues` — cache bypass
 8. **LOW** — `xmlNodeGetContent` NULL not checked before `xmlStrEqual` in `xmlXPathEqualNodeSets` — incorrect equality on OOM
+9. **LOW** — `xmlXPathFormatNumber` uses `snprintf` which produces locale-dependent decimal separators — garbled XPath number output in non-C locales (e.g., `de_DE` uses comma)
 
 ### Areas Confirmed Safe
 - Value stack: `xmlGrowCapacity` + `XPATH_MAX_STACK_DEPTH` (1M limit)

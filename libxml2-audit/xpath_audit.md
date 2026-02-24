@@ -177,6 +177,20 @@ if (arg1 == arg2) {
 
 ---
 
+## Finding #9: xmlXPathFormatNumber Locale-Dependent Decimal Separator (LOW)
+
+**Location:** `xpath.c:2268-2316` (in `xmlXPathFormatNumber`, regular and scientific float paths)
+
+**Analysis:** `snprintf` uses the process locale for the decimal separator. In locales where `'.'` is replaced by `','` (e.g., `de_DE`, `fr_FR`):
+1. `snprintf` produces `'1,500000000000000'` instead of `'1.500000000000000'`
+2. The trailing-zero removal loop (line 2327) scans backward for `'0'`, stops at `','`
+3. `if (*ptr != '.')` (line 2329): `','` is not `'.'`, so `ptr++` skips past the comma
+4. The copy loop then NUL-terminates at the wrong position, producing output like `'1,'`
+
+**Impact:** Incorrect XPath number-to-string conversion in non-C locales. Not a memory safety issue, but affects correctness for any process that calls `setlocale(LC_ALL, "de_DE")` or similar before using libxml2's XPath. The fix would be to use a locale-independent formatting approach.
+
+---
+
 ## Areas Confirmed Safe
 
 ### Value Stack (`valueTab`/`valueNr`/`valueMax`)
